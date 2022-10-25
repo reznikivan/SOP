@@ -1,0 +1,53 @@
+from cmath import sqrt
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+
+def find_contours_of_cards(image):
+    blurred = cv2.GaussianBlur(image, (3, 3), 0)
+    T, thresh_img = cv2.threshold(blurred, 215, 255, 
+                                  cv2.THRESH_BINARY)
+    (cnts, _) = cv2.findContours(thresh_img, 
+                                cv2.RETR_EXTERNAL,
+                                cv2.CHAIN_APPROX_SIMPLE)
+    img1 = cv2.drawContours(thresh_img, 
+                     cnts,
+                     1,
+                     (0,255,0), 3)
+    plt.imshow(img1, cmap = 'twilight')
+    plt.show()
+                    
+    return cnts
+
+def calcDistPointRect(p, rect):
+    dx = max(rect[0] - p[0], 0, p[0] - rect[0])
+    dy = max(rect[1] - p[1], 0, p[1] - rect[1])
+    return sqrt(dx**2 + dy**2)
+
+def calcDistCnts(cnt1, cnt2, size): 
+    minDist = max(size[0], size[1]) #max from width and height
+    for i in cnt1:
+        for j in cnt2:
+            dist = math.sqrt((i[0][0] - j[0][0])**2 + (i[0][1] - j[0][1])**2)
+            if dist < minDist:
+                minDist = dist
+    return minDist
+
+
+img = cv2.imread('cards.jpeg', cv2.IMREAD_GRAYSCALE)
+size = img.shape
+cnts = find_contours_of_cards(img)
+#cnts=[cv2.boundingRect(cnt) for cnt in cnts]
+imgContour1 = cv2.drawContours(img, cnts, 3, (255,255,0), 4)
+imgContour2 = cv2.drawContours(img, cnts, 29, (0,255,0), 4)
+plt.figure(1)
+plt.imshow(imgContour1)
+plt.figure(2)
+plt.imshow(imgContour2)
+plt.show()
+print(calcDistCnts(cnts[3], cnts[29], size))
+
+#img = img.astype(np.uint8)
+#cv2.imshow(find_contours_of_cards(img))
+#cv2.waitKey(0)
